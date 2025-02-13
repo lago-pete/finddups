@@ -6,6 +6,12 @@
 
 
 int main(int argc, char *argv[]) {
+    table hashed_table;
+    hashed_table.size = 0;
+    hashed_table.buckets = NULL;
+
+    
+
     if (argc < 2) {
         path(".");
     } else {

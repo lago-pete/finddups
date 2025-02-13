@@ -12,22 +12,16 @@
 #define FINDDUPS_H
 
 typedef struct {
-    char *file_name;
     char *path;
     int size;
+    int paired;
 } file_spec;
 
-typedef struct {
-    file_spec *files; 
-    int count;    
-    int capacity;  
-} bucket;
 
-typedef struct {
-    int size;        
-    bucket *buckets; 
-} table;
-
+struct Node {
+    file_spec data;
+    struct Node* next;
+};
 
 
 
