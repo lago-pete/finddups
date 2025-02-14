@@ -9,17 +9,18 @@ int main(int argc, char *argv[]) {
     int max_size = 5;
     int num_of_files = 0;
     int current_size = 0;
-    struct Node** lists = (struct Node**)malloc(size * sizeof(struct Node*));
+    struct Node** lists = (struct Node**)malloc(max_size * sizeof(struct Node*));
     struct stat path_stat;
     stat(argv[1], &path_stat);
 
 
 
 
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < max_size; i++) {
         lists[i] = NULL;
     }
 
+    
 
     // Thought process: if there is no argument, then we will process the cwd.
     // Or if there is one argument which is a file, we will process that argument then the cwd.
@@ -27,15 +28,17 @@ int main(int argc, char *argv[]) {
     if (argc < 2) {
         if(S_ISREG(path_stat.st_mode)) {
             file_proc(argv[1], lists, &current_size, &max_size, &num_of_files);
-            path(".", lists, &current_size, &size, &num_of_files);
+            path(".", lists, &current_size, &max_size, &num_of_files);
         }
         else if (S_ISDIR(path_stat.st_mode)) {
             path(argv[1], lists, &current_size, &max_size, &num_of_files);
         } 
         else{
-            fprintf(stderr, "Ignoring non-regular file: %s\n", argv[1]);
+            printf("Going through cwd\n");
             path(".", lists, &current_size, &max_size, &num_of_files);
         }
+        printf("No arguments given, going through cwd\n");
+        fprintf(stderr, "Ignoring non-regular file: %s\n", argv[1]);
         
     } else {
         for (int i = 1; i < argc; i++) {
@@ -45,7 +48,7 @@ int main(int argc, char *argv[]) {
 
 
 
-    print_lists(lists, size);
+    print_lists(lists, current_size, num_of_files);
 
 
 

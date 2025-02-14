@@ -6,7 +6,7 @@
 
 
 
-void path(const char *path, struct Node** lists, int* current_size, int* max_size, int* num_of_files)
+void path(const char *path, Node** lists, int* current_size, int* max_size, int* num_of_files)
  {
     struct stat path_stat;
     stat(path, &path_stat);
@@ -23,17 +23,15 @@ void path(const char *path, struct Node** lists, int* current_size, int* max_siz
 }
 
 
-void file_proc(const char *filepath, struct Node** lists, int* current_size, int* max_size, int* num_of_files)
+void file_proc(const char *filepath, Node** lists, int* current_size, int* max_size, int* num_of_files)
  {
     //printf("Processing file: %s\n", filepath);
-    int current = *current_size;
-    int max = *max_size;
     struct stat file_stat;
     stat(filepath, &file_stat);
 
-    file_spec *file_s;
+    file_spec *file_s = (file_spec*)malloc(sizeof(file_spec)); 
 
-    file_s->path = strdup(filepath); // dont wont pointer errors
+    file_s->path = strdup(filepath); // dont wont pointer errors, when implememnt first round of testing check for this
     file_s->size = file_stat.st_size;
     file_s->paired = 0;
 
@@ -48,14 +46,14 @@ void file_proc(const char *filepath, struct Node** lists, int* current_size, int
     
     insert(&lists[index], *file_s);
     (*num_of_files)++;
-    (*current_size)++; // Update current_size correctly
+    (*current_size)++; 
     
 
     
 }
 
 
-void direc(const char *dirpath, struct Node** lists, int* current_size, int* max_size, int* num_of_files)
+void direc(const char *dirpath, Node** lists, int* current_size, int* max_size, int* num_of_files)
 {
     //printf("Processing directory: %s\n", dirpath);
     DIR *dir = opendir(dirpath);
@@ -94,7 +92,9 @@ int compareFiles(char *fname0, char *fname1)
 
     if (file0 == NULL || file1 == NULL)
     {
-        eprintf_fail("Error Opening FILE");
+        fclose(file0);
+        fclose(file1);
+        printf("Error: File not found\n");
 
         return 0;
     };
@@ -106,15 +106,19 @@ int compareFiles(char *fname0, char *fname1)
 
         if (ch0 == EOF && ch1 == EOF)
         {
+            fclose(file0);
+            fclose(file1);
             return 1;
         }
 
         if (ch0 != ch1)
         {
+            fclose(file0);
+            fclose(file1);
             return 0;
         }
     }
-    eprintf("Passed");
+        
     return 1;
 }
 
@@ -124,8 +128,8 @@ int compareFiles(char *fname0, char *fname1)
 
 
 // Function to create a new node
-struct Node* createNode(file_spec datas) {
-    struct Node* new = (struct Node*)malloc(sizeof(struct Node));
+Node* createNode(file_spec datas) {
+    Node* new = (Node*)malloc(sizeof(Node));
 
     new->data = datas;
     new->next = NULL;
@@ -133,33 +137,52 @@ struct Node* createNode(file_spec datas) {
 }
 
 
-void insert(struct Node** head, file_spec datas) {
-    struct Node* new = createNode(datas);
+void insert(Node** head, file_spec datas) {
+    Node* new = createNode(datas);
     new->next = *head;
     *head = new;
 }
 
 
 
-struct Node** resizeArray(struct Node** lists, int* current_size, int* max_size) {
-    int new = (*max_size) * 2; 
+Node** resizeArray(Node** lists, int* current_size, int* max_size) {
+    int new = (*max_size) * 2;
+    Node** newLists = (Node**)malloc(new * sizeof(Node*));
+   
 
-    struct Node** newLists = (struct Node**)realloc(lists, new * sizeof(struct Node*));
-    
-    for (int i = *current_size; i < new; i++) {
+    for (int i = 0; i < new; i++) {
         newLists[i] = NULL;
     }
+    
 
-   
+    for (int i = 0; i < *max_size; i++) {
+        Node* current = lists[i];
+        while (current) {
+            Node* temp = current;
+            current = current->next;
+
+            int new_index = hash_function(temp->data.size, new);
+
+            temp->next = newLists[new_index];
+            newLists[new_index] = temp;
+        }
+    }
+
+    free(lists); 
     *max_size = new;
     return newLists;
 }
 
 
 
-void print_lists(struct Node** lists, int current_size) {
+void print_lists(Node** lists, int current_size, int num_of_items) {
+    if(num_of_items == current_size) {
+        printf("No duplicates found.\n");
+        return;
+    }
+
     for (int i = 0; i < current_size; i++) {
-        struct Node* current = lists[i];
+        Node* current = lists[i];
         while (current != NULL) {
             printf("Path: %s\n", current->data.path);
             printf("Size: %d\n", current->data.size);
@@ -170,9 +193,9 @@ void print_lists(struct Node** lists, int current_size) {
 }
 
 
-//this is what google recommends for a hash function it is prime based hashing
+//this is what google recommends for a hash function, it is prime based hashing
 int hash_function(off_t size, int max_size) {
-    return (size * 2654435761) % max_size; // Prime-based hashing
+    return abs(size * 2654435761) % max_size; // Prime-based hashing
 }
 
 
