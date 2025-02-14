@@ -8,6 +8,7 @@
 
 void path(const char *path, Node** lists, int* current_size, int* max_size, int* num_of_files)
  {
+    printf("Processing Path:\n");
     struct stat path_stat;
     stat(path, &path_stat);
 
@@ -25,7 +26,7 @@ void path(const char *path, Node** lists, int* current_size, int* max_size, int*
 
 void file_proc(const char *filepath, Node** lists, int* current_size, int* max_size, int* num_of_files)
  {
-    //printf("Processing file: %s\n", filepath);
+    printf("Processing file: %s\n", filepath);
     struct stat file_stat;
     stat(filepath, &file_stat);
 
@@ -55,7 +56,7 @@ void file_proc(const char *filepath, Node** lists, int* current_size, int* max_s
 
 void direc(const char *dirpath, Node** lists, int* current_size, int* max_size, int* num_of_files)
 {
-    //printf("Processing directory: %s\n", dirpath);
+    printf("Processing directory: %s\n", dirpath);
     DIR *dir = opendir(dirpath);
 
 
